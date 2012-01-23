@@ -5,6 +5,7 @@
 ;; Author: Taiki SUGAWARA <buzz.taiki@gmail.com>
 ;; Maintainer: Taiki SUGAWARA <buzz.taiki@gmail.com>
 ;; Version: 0.01
+;; URL: https://github.com/buzztaiki/vc-svn17-el
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
