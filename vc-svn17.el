@@ -23,12 +23,10 @@
 ;;; Commentary:
 
 ;; This package provides subversion 1.7 support for vc-svn on Emacs23.
-
+;; 
 ;; To use this package, put followings in your .emacs:
-
-;; #+begin_src emacs-lisp
-;;   (require 'vc-svn17)
-;; #+end_src
+;; 
+;;     (require 'vc-svn17)
 
 ;;; Code:
 
