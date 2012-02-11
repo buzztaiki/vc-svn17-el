@@ -39,33 +39,40 @@
 	  `(defun ,name ,args ,(car body) ,@(cdr body))
 	`(defun ,name ,args nil ,@body))))
 
-(defmacro vc-svn17-defadvice (name args &rest body)
+(defmacro vc-svn17-repfun (name args &rest body)
   (declare (indent defun))
   `(when (<= emacs-major-version 23)
-     (defadvice ,name (,(car args) vc-svn17 activate) ,@body)))
+     (defadvice ,name (around vc-svn17 ,args activate)
+       (setq ad-return-value ,@body))))
+
 
 (vc-svn17-defun vc-svn-root (file)
   (vc-find-root file vc-svn-admin-directory))
 
-  
-(vc-svn17-defadvice vc-svn-registered (around)
-  (let ((root (vc-svn-root (ad-get-arg 0))))
-    (when root
-      (ad-set-arg 0 root)
-      ad-do-it)))
+(vc-svn17-repfun vc-svn-registered (file)
+  (when (vc-svn-root file)
+    (with-temp-buffer
+      (cd (file-name-directory file))
+      (let* (process-file-side-effects
+	     (status
+	      (condition-case nil
+		  ;; Ignore all errors.
+		  (vc-svn-command t t file "status" "-v")
+		(error nil))))
+	(when (eq 0 status)
+	  (let ((parsed (vc-svn-parse-status file)))
+	    (and parsed (not (memq parsed '(ignored unregistered))))))))))
 
-(vc-svn17-defadvice vc-svn-responsible-p (around)
-  (setq ad-return-value (vc-svn-root (ad-get-arg 0))))
+(vc-svn17-repfun vc-svn-responsible-p (file)
+  (vc-svn-root file))
 
-(vc-svn17-defadvice vc-svn-repository-hostname (around)
-  (setq
-   ad-return-value
-   (with-temp-buffer
-     (let (process-file-side-effects)
-       (vc-svn-command t t dirname "info"))
-     (goto-char (point-min))
-     (when (re-search-forward "^URL: *\\(.*\\)" nil t)
-       (match-string 1)))))
+(vc-svn17-repfun vc-svn-repository-hostname (dirname)
+  (with-temp-buffer
+    (let (process-file-side-effects)
+      (vc-svn-command t t dirname "info"))
+    (goto-char (point-min))
+    (when (re-search-forward "^URL: *\\(.*\\)" nil t)
+      (match-string 1))))
 
 (provide 'vc-svn17)
 ;;; vc-svn17.el ends here
